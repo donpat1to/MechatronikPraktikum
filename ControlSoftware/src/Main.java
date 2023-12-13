@@ -8,7 +8,9 @@ import java.net.Socket;
 
 public class Main {
 
-    String message = "\r";
+    String order = "\r";
+    static int angle = 0;
+    static String message= "\r";
 
     public static void main(String[] args) {
         Main mainClass = new Main();
@@ -23,6 +25,9 @@ public class Main {
             // Reader und Writer für die Socket-Verbindung erstellen
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+
+            // Reader für Keyboard-Input
+            BufferedReader readerKeyboard = new BufferedReader(new InputStreamReader(System.in));
 
             // Receiver: Endlosschleife zum Lesen von Daten
             new Thread(() -> {
@@ -40,10 +45,20 @@ public class Main {
             // Sender: Daten senden (in diesem Fall "Hello")
             while(true) {
                 try {
+                    //part for reading keyboard input
+                    char input;
+                    input = (char) readerKeyboard.read();
+                    message = input + angle + "\r";
+                    System.out.println("Eingetippter angle: " + angle + "\n");
+
+
+                    //part for writing over wifi
                     Thread.sleep(1000);
                     writer.write(mainClass.message);
                     System.out.println("Sended");
                     writer.flush();
+
+
                 } catch (IOException  | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -64,7 +79,7 @@ public class Main {
         JButton buttonRight = new JButton("➡️");
         JButton buttonLeft = new JButton("⬅️️");
         JButton fire = new JButton("Fire");
-        JSlider accelerate = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
+        JSlider accelerate = new JSlider(JSlider.HORIZONTAL, 0, 4, 0);
 
         JPanel panel = new JPanel();
 
@@ -81,7 +96,7 @@ public class Main {
         buttonUp.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                message = "up\r";
+                message = "up" + angle +"\r";
                 System.out.println("Button Up wurde gedrückt");
             }
         });
@@ -89,7 +104,7 @@ public class Main {
         buttonDown.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                message = "down\r";
+                message = "down;" + angle + "\r";
                 System.out.println("Button Down wurde gedrückt");
             }
         });
@@ -97,7 +112,7 @@ public class Main {
         buttonLeft.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                message = "left\r";
+                message = "left;" + angle + "\r";
                 System.out.println("Button Left wurde gedrückt");
             }
         });
@@ -133,6 +148,7 @@ public class Main {
                 JSlider source = (JSlider) e.getSource();
                 if (!source.getValueIsAdjusting()) {
                     int value = source.getValue();
+
                     System.out.println("Slider wurde auf " + value + " gesetzt");
                 }
             }
