@@ -1,4 +1,3 @@
-
 #include "simpletools.h"
 #include "fdserial.h"
 #include "abdrive360.h"           
@@ -6,33 +5,33 @@
 #include "ping.h"
 #include "string.h"
 
- fdserial *board;
-  fdserial *wlan;
+fdserial *board;  
+fdserial *wlan;
   
-  int speed = 0; 
-  
-void sending()
+int speed = 0; 
+char[128] m_direction;
+int fire;
+int ready;
+
+
+void send(char bufferSend[128])
 {
   int printIndex = 0;
-  char bufferSend[128] = "Bye!\r";  
-  while(1){
-    char chSend = fdserial_rxChar(board);
-      if(chSend == '\r') { 
-        while(printIndex < 5) {
-          fdserial_txChar(wlan, bufferSend[printIndex]); 
-          printIndex++; 
-        }
-        printIndex = 0; 
-      }
-  }     
+  bufferSend = "Bye!\r";  
+  char chSend = fdserial_rxChar(board);
+  if(chSend == '\r') { 
+    while(printIndex < sizeof(bufferSend)) {
+      fdserial_txChar(wlan, bufferSend[printIndex]); 
+      printIndex++; 
+    }
+    printIndex = 0; 
+  }   
 }
 
 void order(char message[]){
-  //printf();
   if(strcmp(message, "up") == 0) {
     driveForward(); 
-  }  
-  else if(strcmp(message, "down") == 0) {
+  } else if(strcmp(message, "down") == 0) {
     driveBackwards(); 
   } else if(strcmp(message, "right") == 0) {
     driveRight(); 
@@ -56,6 +55,7 @@ void driveLeft() {
 
 void driveBackwards() {
   drive_speed(-15,-15);
+  send("1\r");
 } 
 
 int main()
@@ -67,11 +67,9 @@ int main()
   int index = 0;
   int printIndex2 = 0; 
   
-  int* cog1 = cog_run(sending, 100); 
-  
   while(1)
   {
-     high(26);
+    high(26);
     char ch = fdserial_rxChar(wlan);  
      
     if(ch == '\r') {

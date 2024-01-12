@@ -1,62 +1,214 @@
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import javax.swing.text.DefaultCaret;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 
 public class Main {
 
-    String order = "\r";
-    static int angle = 0;
-    static String message= "\r";
-    static Protocol prot;
+    //following objects server connecting
+    Socket socket;
+    static Protocol prot = null;
+    static String ip_address = "192.168.4.1";
+    //static int port = 23;
+    static int port = 80;
+
+
+    //following objects for GUI-generation
+    JPanel mainPanel = new JPanel();
+    JPanel leftMainPanel = new JPanel();
+    JPanel rightMainPanel = new JPanel();
+    JPanel shootPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JPanel speedPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JPanel gunPositionPanel = new JPanel();
+    JPanel monitoringPanel = new JPanel(new BorderLayout());
+
+    /****
+     * JButton fire                     => Object 1
+     * JButton ready                    => Object 2
+     * JSlider accelerate               => Object 3
+     * JSlider gunPosition              => Object 4
+     * JTextArea monitoringCommands     => Object 5
+     * JLabel shoot                     => Object 6
+     * JLabel setReady                  => Object 7
+     * JScrollPane pane                 => Object 8
+     */
+    JButton fire = new JButton("Fire");
+    JButton ready = new JButton("NotReadyToFire");
+    JSlider accelerate = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
+    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 0, 4, 0);
+    JTextArea monitoringCommands = new JTextArea("");
+    JLabel shoot = new JLabel("Shoot one dart!");
+    JLabel setReady = new JLabel("Set ready!");
+    JScrollPane scrollPane;
+
+    /***
+     * Dimension-Array containing every x and y size
+     * respecting the index order of stated objects above
+     * respecting the space between Object2 and Object 6 declared below (20 units space)
+     *
+     * for reference:   longest x-distance: 19*20 + 20 => 400
+     *                  longest y-distance: 15*10 => 150
+     */
+    static int smallObjectsX = 20;//40
+    static int smallObjectsY = 10;//20
+    static Dimension[] dimensions = {
+            new Dimension(smallObjectsX * 4, smallObjectsY * 3),
+            new Dimension(smallObjectsX * 7, smallObjectsY * 3),
+            new Dimension(smallObjectsX * 20, smallObjectsY * 2),
+            new Dimension(smallObjectsX * 3, smallObjectsY * 25),       //only object on right side
+            new Dimension(smallObjectsX * 21, smallObjectsY * 15),
+            new Dimension(smallObjectsX * 5, smallObjectsY * 2),
+            new Dimension(smallObjectsX * 3, smallObjectsY * 2)
+    };
+
+    static int borderDistance = 7;
+
+    private static void appendText(JTextArea textArea, String text){
+        textArea.append(text + "\n");
+        textArea.setCaretPosition(textArea.getDocument().getLength());
+    }
+
 
     public static void main(String[] args) {
-        Main mainClass = new Main();
+        Main mainClass = new Main(ip_address, port);
+    }
 
-        String ip_address = "192.168.4.1";
-        int port = 23;
-
-        try {
-            Socket socket = new Socket(ip_address, port);
+    public Main(String addr, int port) {
+        //Setting up Socket connection with DjangoBot
+        /*try {
+            socket = new Socket(addr, port);
 
             // Reader und Writer für die Socket-Verbindung erstellen
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             prot = new Protocol(reader, writer);
+            System.out.println("Prot set!");
         } catch (IOException e) {
+            System.out.println("Socketserver has to run!");
+            System.exit(1);
             e.printStackTrace();
-        }
-    }
+        }*/
 
-    public Main() {
-        JFrame frame = new JFrame("BotGUI");
-        frame.setSize(300,200);
+        JFrame frame = new JFrame("DjangoGUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        //Object specific changes
+        shoot.setOpaque(false);
+        setReady.setOpaque(false);
+        ready.setBackground(Color.RED);
+        gunPosition.setOrientation(1);
+        monitoringCommands.setEditable(false);
+        scrollPane = new JScrollPane(monitoringCommands);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-        JButton fire = new JButton("Fire");
-        JSlider accelerate = new JSlider(JSlider.HORIZONTAL, 0, 4, 0);
+        //setting preferred size-dependencies between objects using Int-Arrays
+        fire.setPreferredSize(dimensions[0]);
+        ready.setPreferredSize(dimensions[1]);
+        accelerate.setPreferredSize(dimensions[2]);
+        gunPosition.setPreferredSize(dimensions[3]);
+        monitoringCommands.setSize(dimensions[4]);
+        shoot.setPreferredSize(dimensions[5]);
+        setReady.setPreferredSize(dimensions[6]);
 
-        JPanel panel = new JPanel();
 
-        panel.add(fire);
-        panel.add(accelerate);
-        frame.add(panel);
+        //Setting Borders of each operating Panel
+        gunPositionPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Gun Position"),
+                BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
+        shootPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Shot"),
+                BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
+        speedPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Speed"),
+                BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
+        monitoringPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Monitoring"),
+                BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
+
+        BoxLayout box1 = new BoxLayout(mainPanel, BoxLayout.X_AXIS);
+        BoxLayout box2 = new BoxLayout(leftMainPanel, BoxLayout.Y_AXIS);
+        BoxLayout box3 = new BoxLayout(rightMainPanel, BoxLayout.Y_AXIS);
+        mainPanel.setLayout(box1);
+        leftMainPanel.setLayout(box2);
+        rightMainPanel.setLayout(box3);
+
+        //adding Objects to ShootPanel
+        speedPanel.add(accelerate);
+        shootPanel.add(setReady);
+        shootPanel.add(ready);
+        shootPanel.add(Box.createHorizontalStrut(20));
+        shootPanel.add(shoot);
+        shootPanel.add(fire);
+
+        //adding JSlider to GunPositionPanel
+        gunPositionPanel.add(gunPosition);
+
+        //adding MonitoringTextField to MonitoringPanel
+        //monitoringPanel.add(monitoringCommands);
+        monitoringPanel.add(scrollPane, BorderLayout.CENTER);
+
+        //adding Objects to RightMainPanel
+        rightMainPanel.add(gunPositionPanel);
+
+        //adding Objects to LeftMainPanel
+        leftMainPanel.add(monitoringPanel);
+        leftMainPanel.add(speedPanel);
+        leftMainPanel.add(shootPanel);
+
+        //adding every partial Panel to MainPanel
+        mainPanel.add(leftMainPanel);
+        mainPanel.add(rightMainPanel);
+
+
+
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+
+        frame.add(mainPanel);
+
+
 
 
         // ActionListener für die JButton-Elemente hinzufügen
         fire.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("On/Off Button wurde gedrückt");
+                String text1 = "Shot fired!";
+                String text2 = "You need to configure the Gun Positioning!";
+                if (prot.getReady()) {
+                    appendText(monitoringCommands, text1);
+                    JOptionPane.showMessageDialog(frame, "Shot fired!\nGun gonna be reloaded.");
+                    prot.fire();
+                } else {
+                    appendText(monitoringCommands, text2);
+                }
+                //monitoringCommands.setCaretPosition(monitoringCommands.getDocument().getLength());
             }
         });
 
+
+        //JScrollBar vbar = areaScrollPane.getVerticalScrollBar();
+        ready.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (ready.getBackground().equals(Color.RED)){
+                    ready.setBackground(Color.GREEN);
+                    String text = "Ready to Fire!";
+                    ready.setText(text);
+                    appendText(monitoringCommands, text);
+                    //prot.setReady(true);
+                } else {
+                    ready.setBackground(Color.RED);
+                    String text = "NOT ready to Fire!";
+                    ready.setText(text);
+                    appendText(monitoringCommands, text);
+                    //prot.setReady(false);
+                }
+            }
+        });
 
         // ChangeListener für den JSlider hinzufügen
         accelerate.addChangeListener(new ChangeListener() {
@@ -64,6 +216,15 @@ public class Main {
             public void stateChanged(ChangeEvent e) {
                 int value = accelerate.getValue();
                 prot.setM_speed(String.valueOf(value));
+                frame.requestFocusInWindow();
+            }
+        });
+
+        gunPosition.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                int value = gunPosition.getValue();
+                prot.setGunPos(String.valueOf(value));
                 frame.requestFocusInWindow();
             }
         });
@@ -85,9 +246,14 @@ public class Main {
         });
 
 
+
+        //finishing off the frame
+        frame.setLocation(600, 400);
+
         frame.requestFocusInWindow();
         frame.setFocusable(true);
 
         frame.setVisible(true);
+        frame.pack();
     }
 }
