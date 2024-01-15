@@ -3,6 +3,6 @@ public interface BotInterface {
     void turnLeft();
     void driveForwards();
     void driveBackwards();
-    void setReady(boolean ready);
+    void setGunReady(boolean ready);
     void fire();
 }

@@ -1,10 +1,8 @@
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import java.net.Socket;
 
 public class Main {
@@ -21,28 +19,33 @@ public class Main {
     JPanel mainPanel = new JPanel();
     JPanel leftMainPanel = new JPanel();
     JPanel rightMainPanel = new JPanel();
+    JPanel informationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
     JPanel shootPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
     JPanel speedPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    JPanel gunPositionPanel = new JPanel();
+    JPanel gunPositionPanel = new JPanel(new BorderLayout());
     JPanel monitoringPanel = new JPanel(new BorderLayout());
 
     /****
      * JButton fire                     => Object 1
      * JButton ready                    => Object 2
-     * JSlider accelerate               => Object 3
+     * JSlider speed                    => Object 3
      * JSlider gunPosition              => Object 4
      * JTextArea monitoringCommands     => Object 5
      * JLabel shoot                     => Object 6
      * JLabel setReady                  => Object 7
      * JScrollPane pane                 => Object 8
+     * JLabel currentPosition           => Object 9
+     * JLabel currentMovement           => Object 10
      */
     JButton fire = new JButton("Fire");
     JButton ready = new JButton("NotReadyToFire");
-    JSlider accelerate = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
+    JSlider speed = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
     JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 0, 4, 0);
     JTextArea monitoringCommands = new JTextArea("");
     JLabel shoot = new JLabel("Shoot one dart!");
     JLabel setReady = new JLabel("Set ready!");
+    JLabel currentPosition = new JLabel("Current Position: 0");
+    JLabel currentMovement = new JLabel("Current Movement: -");
     JScrollPane scrollPane;
 
     /***
@@ -59,10 +62,12 @@ public class Main {
             new Dimension(smallObjectsX * 4, smallObjectsY * 3),
             new Dimension(smallObjectsX * 7, smallObjectsY * 3),
             new Dimension(smallObjectsX * 20, smallObjectsY * 2),
-            new Dimension(smallObjectsX * 3, smallObjectsY * 25),       //only object on right side
+            new Dimension(smallObjectsX * 3, smallObjectsY * 18),       //only object on right side
             new Dimension(smallObjectsX * 21, smallObjectsY * 15),
             new Dimension(smallObjectsX * 5, smallObjectsY * 2),
-            new Dimension(smallObjectsX * 3, smallObjectsY * 2)
+            new Dimension(smallObjectsX * 3, smallObjectsY * 2),
+            new Dimension(smallObjectsX * 7, smallObjectsY * 2),
+            new Dimension(smallObjectsX * 7, smallObjectsY * 3)
     };
 
     static int borderDistance = 7;
@@ -108,11 +113,13 @@ public class Main {
         //setting preferred size-dependencies between objects using Int-Arrays
         fire.setPreferredSize(dimensions[0]);
         ready.setPreferredSize(dimensions[1]);
-        accelerate.setPreferredSize(dimensions[2]);
+        speed.setPreferredSize(dimensions[2]);
         gunPosition.setPreferredSize(dimensions[3]);
         monitoringCommands.setSize(dimensions[4]);
         shoot.setPreferredSize(dimensions[5]);
         setReady.setPreferredSize(dimensions[6]);
+        currentPosition.setPreferredSize(dimensions[7]);
+        currentMovement.setPreferredSize(dimensions[8]);
 
 
         //Setting Borders of each operating Panel
@@ -128,16 +135,21 @@ public class Main {
         monitoringPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("Monitoring"),
                 BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
+        informationPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Info"),
+                BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
 
         BoxLayout box1 = new BoxLayout(mainPanel, BoxLayout.X_AXIS);
         BoxLayout box2 = new BoxLayout(leftMainPanel, BoxLayout.Y_AXIS);
         BoxLayout box3 = new BoxLayout(rightMainPanel, BoxLayout.Y_AXIS);
+        //BoxLayout box4 = new BoxLayout(informationPanel, BoxLayout.Y_AXIS);
         mainPanel.setLayout(box1);
         leftMainPanel.setLayout(box2);
         rightMainPanel.setLayout(box3);
+        //informationPanel.setLayout(box4);
 
         //adding Objects to ShootPanel
-        speedPanel.add(accelerate);
+        speedPanel.add(speed);
         shootPanel.add(setReady);
         shootPanel.add(ready);
         shootPanel.add(Box.createHorizontalStrut(20));
@@ -145,14 +157,18 @@ public class Main {
         shootPanel.add(fire);
 
         //adding JSlider to GunPositionPanel
-        gunPositionPanel.add(gunPosition);
+        gunPositionPanel.add(gunPosition, BorderLayout.NORTH);
+        gunPositionPanel.add(currentPosition, BorderLayout.SOUTH);
+
+        //adding Objects to InformationPanel
+        informationPanel.add(currentMovement);
 
         //adding MonitoringTextField to MonitoringPanel
-        //monitoringPanel.add(monitoringCommands);
         monitoringPanel.add(scrollPane, BorderLayout.CENTER);
 
         //adding Objects to RightMainPanel
         rightMainPanel.add(gunPositionPanel);
+        rightMainPanel.add(informationPanel);
 
         //adding Objects to LeftMainPanel
         leftMainPanel.add(monitoringPanel);
@@ -178,7 +194,7 @@ public class Main {
             public void actionPerformed(ActionEvent e) {
                 String text1 = "Shot fired!";
                 String text2 = "You need to configure the Gun Positioning!";
-                if (prot.getReady()) {
+                if (prot.getGunReady() && prot.getPositionReady()) {
                     appendText(monitoringCommands, text1);
                     JOptionPane.showMessageDialog(frame, "Shot fired!\nGun gonna be reloaded.");
                     prot.fire();
@@ -190,7 +206,6 @@ public class Main {
         });
 
 
-        //JScrollBar vbar = areaScrollPane.getVerticalScrollBar();
         ready.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -199,23 +214,24 @@ public class Main {
                     String text = "Ready to Fire!";
                     ready.setText(text);
                     appendText(monitoringCommands, text);
-                    //prot.setReady(true);
+                    prot.setGunReady(true);
                 } else {
                     ready.setBackground(Color.RED);
                     String text = "NOT ready to Fire!";
                     ready.setText(text);
                     appendText(monitoringCommands, text);
-                    //prot.setReady(false);
+                    prot.setGunReady(false);
                 }
             }
         });
 
         // ChangeListener für den JSlider hinzufügen
-        accelerate.addChangeListener(new ChangeListener() {
+        speed.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                int value = accelerate.getValue();
-                prot.setM_speed(String.valueOf(value));
+                int value = speed.getValue();
+                currentMovement.setText("Current Position: " + value);
+                prot.setM_speed(value);
                 frame.requestFocusInWindow();
             }
         });
@@ -224,7 +240,8 @@ public class Main {
             @Override
             public void stateChanged(ChangeEvent e) {
                 int value = gunPosition.getValue();
-                prot.setGunPos(String.valueOf(value));
+                prot.setPositionReady(value != 0);
+                prot.setGunPos(value);
                 frame.requestFocusInWindow();
             }
         });
@@ -234,14 +251,22 @@ public class Main {
             public void keyTyped(KeyEvent e) {
                 char input = e.getKeyChar();
 
-                if(input == 'w')
+                if(input == 'w') {
+                    currentMovement.setText("Current Movement: w");
                     prot.driveForwards();
-                if(input == 's')
+                }
+                if(input == 's') {
+                    currentMovement.setText("Current Movement: s");
                     prot.driveBackwards();
-                if(input == 'd')
+                }
+                if(input == 'd') {
+                    currentMovement.setText("Current Movement: d");
                     prot.turnRight();
-                if(input == 'a')
+                }
+                if(input == 'a') {
+                    currentMovement.setText("Current Movement: a");
                     prot.turnLeft();
+                }
             }
         });
 

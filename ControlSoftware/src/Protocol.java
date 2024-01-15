@@ -1,16 +1,17 @@
 import java.io.*;
 
 public class Protocol implements BotInterface{
-    String message, answer, m_direction, m_speed, gunPos = "\r";
-    int ready, fire = 0;
+    String message, answer, m_direction = "\r";
+    int gunPos, fire, m_speed, gunReady, positionReady = 0;
     BufferedReader reader;
     BufferedWriter writer;
 
+    /**** Receiver: Thread zum Lesen von Daten
+     * Protokollform:
+     * Attribution:
+     */
     public Protocol(BufferedReader reader, BufferedWriter writer) {
-        /**** Receiver: Thread zum Lesen von Daten
-         * Protokollform:
-         * Attribution:
-         */
+
         this.writer = writer;
         this.reader = reader;
 
@@ -18,60 +19,45 @@ public class Protocol implements BotInterface{
             while(true){
                 try {
                     answer = reader.readLine();
-                    /*if (answer != null) {
-                        System.out.println("read");
-                        System.out.println(answer);
-                    }*/
                     System.out.println(answer);
-                } catch (IOException e) {
+                    Thread.sleep(100);
+                } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         }).start();
 
-
-        /**** SENDER: Thread zum Schreiben von Daten
-         * Protokollform:   "m_direction;m_speed;fire;ready;gunPos"
-         * Attribution:     "String;String;String;String;String"
-         *
-        new Thread(() -> {
-            try {
-                while (true) {
-                    message = m_direction + ";" + m_speed + ";" + fire + ";" + ready + ";" + gunPos + "\r";
-                    Thread.sleep(1000);
-                    writer.write(message);
-                    writer.flush();
-                }
-            } catch (IOException  | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }).start();*/
     }
 
+    /**** SENDER: Thread zum Schreiben von Daten
+     * Protokollform:   "m_direction;m_speed;fire;gunPos"
+     * Attribution:     "String;String;int;int"
+     */
     public void send(){
+        //message = "ab" + ";" + 1 + ";" + 2 + ";" + 3;
         try {
-            message = m_direction + ";" + m_speed + ";" + fire + ";" + ";" + gunPos + "\r";
+            message = m_direction + ";" + m_speed + ";" + fire + ";" + gunPos + "\r";
             writer.write(message);
             System.out.println("Sent");
             writer.flush();
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             e.printStackTrace();
         }
     }
 
-    public void printAnswer(){ System.out.println("Answer: " + answer + "\n"); };
-
-
     public void setM_direction(String m_direction) {
         this.m_direction = m_direction;
+        send();
     }
 
-    public void setM_speed(String m_speed) {
+    public void setM_speed(int m_speed) {
         this.m_speed = m_speed;
+        send();
     }
 
-    public void setGunPos(String gunPos){
+    public void setGunPos(int gunPos){
         this.gunPos = gunPos;
+        send();
     }
 
     @Override
@@ -87,22 +73,32 @@ public class Protocol implements BotInterface{
     public void turnRight() { drive(2); }
 
     @Override
-    public void setReady(boolean rdy) {
+    public void setGunReady(boolean rdy) {
         if (rdy)
-            this.ready = 1;
+            this.gunReady = 1;
         else
-            this.ready = 0;
+            this.gunReady = 0;
     }
 
-    public boolean getReady(){
-        if (this.ready == 1)
-            return true;
+    public void setPositionReady(boolean rdy) {
+        if (rdy)
+            this.positionReady = 1;
         else
-            return false;
+            this.positionReady = 0;
     }
 
+    public boolean getGunReady(){
+        return this.gunReady == 1;
+    }
+
+    public boolean getPositionReady(){
+        return this.positionReady == 1;
+    }
     @Override
-    public void fire() { fire = 1; }
+    public void fire() {
+        fire = 1;
+        send();
+    }
 
     public void drive(int sp){
         if (sp == 1)
