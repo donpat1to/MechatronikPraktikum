@@ -15,49 +15,70 @@ public class Protocol implements BotInterface{
         this.writer = writer;
         this.reader = reader;
 
+
         new Thread(() -> {
+            System.out.println("Receiving");
             while(true){
+                String temp = "\n";
+
                 try {
-                    answer = reader.readLine();
-                    System.out.println(answer);
-                    Thread.sleep(100);
+                    //System.out.println("Receiving1");
+                    //System.out.println(reader.ready());
+                    if (reader.ready())
+                        temp = reader.readLine();
+                    //System.out.println("Receiving2");
+                    if (!temp.isBlank())
+                        System.out.println("Received: " + temp);
+                    //System.out.println("Receiving3");
+                    Thread.sleep(500);
+                    send();
                 } catch (IOException | InterruptedException e) {
+                    System.out.println("theres a problem in receiving");
                     e.printStackTrace();
                 }
             }
         }).start();
-
     }
 
     /**** SENDER: Thread zum Schreiben von Daten
      * Protokollform:   "m_direction;m_speed;fire;gunPos"
      * Attribution:     "String;String;int;int"
      */
-    public void send(){
+    public void send() {
         //message = "ab" + ";" + 1 + ";" + 2 + ";" + 3;
         try {
-            message = m_direction + ";" + m_speed + ";" + fire + ";" + gunPos + "\r";
+            message = m_direction + ";" + m_speed + ";" + fire + ";" + gunPos + ";" + "\r";
+            System.out.println(message);
+            //Thread.sleep(1000);
             writer.write(message);
-            System.out.println("Sent");
             writer.flush();
-        } catch (IOException | RuntimeException e) {
+            reset();
+            //System.out.println("Sent");
+            //writer.close();
+        } catch (IOException e) {//| InterruptedException e) {
+            //writer.close();
             e.printStackTrace();
         }
     }
 
+    void reset(){
+        this.m_direction = "0";
+        this.fire = 0;
+    }
+
     public void setM_direction(String m_direction) {
         this.m_direction = m_direction;
-        send();
+        //send();
     }
 
     public void setM_speed(int m_speed) {
         this.m_speed = m_speed;
-        send();
+        //send();
     }
 
     public void setGunPos(int gunPos){
         this.gunPos = gunPos;
-        send();
+        //send();
     }
 
     @Override
@@ -97,7 +118,7 @@ public class Protocol implements BotInterface{
     @Override
     public void fire() {
         fire = 1;
-        send();
+        //send();
     }
 
     public void drive(int sp){

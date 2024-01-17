@@ -3,6 +3,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.net.Socket;
 
 public class Main {
@@ -11,8 +12,8 @@ public class Main {
     Socket socket;
     static Protocol prot = null;
     static String ip_address = "192.168.4.1";
-    //static int port = 23;
-    static int port = 80;
+    static int port = 23;
+    //static int port = 80;
 
 
     //following objects for GUI-generation
@@ -84,7 +85,7 @@ public class Main {
 
     public Main(String addr, int port) {
         //Setting up Socket connection with DjangoBot
-        /*try {
+        try {
             socket = new Socket(addr, port);
 
             // Reader und Writer für die Socket-Verbindung erstellen
@@ -96,7 +97,7 @@ public class Main {
             System.out.println("Socketserver has to run!");
             System.exit(1);
             e.printStackTrace();
-        }*/
+        }
 
         JFrame frame = new JFrame("DjangoGUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -201,6 +202,7 @@ public class Main {
                 } else {
                     appendText(monitoringCommands, text2);
                 }
+                frame.requestFocusInWindow();
                 //monitoringCommands.setCaretPosition(monitoringCommands.getDocument().getLength());
             }
         });
@@ -222,6 +224,7 @@ public class Main {
                     appendText(monitoringCommands, text);
                     prot.setGunReady(false);
                 }
+                frame.requestFocusInWindow();
             }
         });
 
