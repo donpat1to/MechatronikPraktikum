@@ -13,7 +13,6 @@ public class Main {
     static Protocol prot = null;
     static String ip_address = "192.168.4.1";
     static int port = 23;
-    //static int port = 80;
 
 
     //following objects for GUI-generation
@@ -40,7 +39,7 @@ public class Main {
      */
     JButton fire = new JButton("Fire");
     JButton ready = new JButton("NotReadyToFire");
-    JSlider speed = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
+    //JSlider speed = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
     JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 0, 4, 0);
     JTextArea monitoringCommands = new JTextArea("");
     JLabel shoot = new JLabel("Shoot one dart!");
@@ -87,7 +86,6 @@ public class Main {
         //Setting up Socket connection with DjangoBot
         try {
             socket = new Socket(addr, port);
-
             // Reader und Writer für die Socket-Verbindung erstellen
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -114,7 +112,7 @@ public class Main {
         //setting preferred size-dependencies between objects using Int-Arrays
         fire.setPreferredSize(dimensions[0]);
         ready.setPreferredSize(dimensions[1]);
-        speed.setPreferredSize(dimensions[2]);
+        //speed.setPreferredSize(dimensions[2]);
         gunPosition.setPreferredSize(dimensions[3]);
         monitoringCommands.setSize(dimensions[4]);
         shoot.setPreferredSize(dimensions[5]);
@@ -131,7 +129,7 @@ public class Main {
                 BorderFactory.createTitledBorder("Shot"),
                 BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
         speedPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Speed"),
+                BorderFactory.createTitledBorder("Setting up dart drum"),
                 BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
         monitoringPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("Monitoring"),
@@ -150,7 +148,7 @@ public class Main {
         //informationPanel.setLayout(box4);
 
         //adding Objects to ShootPanel
-        speedPanel.add(speed);
+        //speedPanel.add(speed);
         shootPanel.add(setReady);
         shootPanel.add(ready);
         shootPanel.add(Box.createHorizontalStrut(20));
@@ -229,7 +227,7 @@ public class Main {
         });
 
         // ChangeListener für den JSlider hinzufügen
-        speed.addChangeListener(new ChangeListener() {
+        /*speed.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 int value = speed.getValue();
@@ -237,7 +235,7 @@ public class Main {
                 prot.setM_speed(value);
                 frame.requestFocusInWindow();
             }
-        });
+        });*/
 
         gunPosition.addChangeListener(new ChangeListener() {
             @Override
@@ -253,7 +251,7 @@ public class Main {
             @Override
             public void keyTyped(KeyEvent e) {
                 char input = e.getKeyChar();
-
+                //WASD - moving direction
                 if(input == 'w') {
                     currentMovement.setText("Current Movement: w");
                     prot.driveForwards();
@@ -270,6 +268,20 @@ public class Main {
                     currentMovement.setText("Current Movement: a");
                     prot.turnLeft();
                 }
+                //set speed
+                for (int i = 48; i < 58; i++) {
+                    char s = (char) i;
+                    System.out.println("set Speed: " + s);
+                    if (input == s) {
+                        currentMovement.setText("Speed: " + (i - 48));
+                        //System.out.println("Speed: " + i);
+                        prot.setM_speed(i - 48);
+                    }
+                }
+                /*if(input == '1') {
+                    currentMovement.setText("Current Movement: 1");
+                    prot.setM_speed(1);
+                }*/
             }
         });
 
