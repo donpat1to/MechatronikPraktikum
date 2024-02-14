@@ -2,6 +2,7 @@ import java.io.*;
 
 public class Protocol implements BotInterface{
     String message, answer, m_direction = "\r";
+    //positionReady rausnehmen
     int gunPos, fire, m_speed, gunReady, positionReady = 0;
     BufferedReader reader;
     BufferedWriter writer;
@@ -112,9 +113,9 @@ public class Protocol implements BotInterface{
         return this.gunReady == 1;
     }
 
-    public boolean getPositionReady(){
+    /*public boolean getPositionReady(){
         return this.positionReady == 1;
-    }
+    }*/
     @Override
     public void fire() {
         fire = 1;

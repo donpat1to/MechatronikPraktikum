@@ -44,7 +44,7 @@ int main()
    int printIndex2 = 0; 
   
    while(1) {
-      space(10);
+      space(2);
       char ch = fdserial_rxChar(wlan);  
 
       if(ch == '\r') {
