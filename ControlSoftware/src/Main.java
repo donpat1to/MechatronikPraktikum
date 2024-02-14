@@ -1,8 +1,10 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
 
@@ -13,7 +15,12 @@ public class Main {
     static Protocol prot = null;
     static String ip_address = "192.168.4.1";
     static int port = 23;
-    //static int port = 80;
+
+    //drum Handling
+    int drumPosition = 1;
+    static int drumMAX = 8;
+    static int picHeight = 90;
+    static int picWidth = 90;
 
 
     //following objects for GUI-generation
@@ -22,7 +29,9 @@ public class Main {
     JPanel rightMainPanel = new JPanel();
     JPanel informationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
     JPanel shootPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    JPanel speedPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JPanel drumPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JPanel drumPanelButtons = new JPanel();
+    JPanel drumPanelDart = new JPanel();
     JPanel gunPositionPanel = new JPanel(new BorderLayout());
     JPanel monitoringPanel = new JPanel(new BorderLayout());
 
@@ -40,14 +49,19 @@ public class Main {
      */
     JButton fire = new JButton("Fire");
     JButton ready = new JButton("NotReadyToFire");
-    JSlider speed = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
-    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 0, 4, 0);
+    //JSlider speed = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
+    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 1, 4, 1);
     JTextArea monitoringCommands = new JTextArea("");
     JLabel shoot = new JLabel("Shoot one dart!");
     JLabel setReady = new JLabel("Set ready!");
-    JLabel currentPosition = new JLabel("Current Position: 0");
+    JLabel currentPosition = new JLabel("Current Position: 1");
     JLabel currentMovement = new JLabel("Current Movement: -");
+    JButton drumForward = new JButton("Rotate Drum");
+    JButton drumDartDrop = new JButton("Drop Dart");
+    JLabel picLabel;
     JScrollPane scrollPane;
+
+
 
     /***
      * Dimension-Array containing every x and y size
@@ -78,6 +92,32 @@ public class Main {
         textArea.setCaretPosition(textArea.getDocument().getLength());
     }
 
+    void setupDrumPicture(){
+        String path = "./src/drumstatus/" + drumPosition + ".png";
+        picLabel = createScaledImageLabel(path);
+    }
+
+    //private JLabel createScaledImageLabel(String imagePath) {
+    private JLabel createScaledImageLabel (String imagePath) {
+            try {
+            BufferedImage originalPicture = ImageIO.read(new File(imagePath));
+            //File inputFile = new File(imagePath);
+            Image scaledImage = originalPicture.getScaledInstance(picWidth, picHeight, Image.SCALE_SMOOTH);
+            BufferedImage resizedPicture = new BufferedImage(picWidth, picHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = resizedPicture.createGraphics();
+            g2d.drawImage(scaledImage, 0, 0, null);
+            g2d.dispose();
+
+            // Create a JLabel with the resized image
+            JLabel picLabelTemp = new JLabel(new ImageIcon(resizedPicture));
+
+            return picLabelTemp;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public static void main(String[] args) {
         Main mainClass = new Main(ip_address, port);
@@ -85,9 +125,8 @@ public class Main {
 
     public Main(String addr, int port) {
         //Setting up Socket connection with DjangoBot
-        try {
+        /*try {
             socket = new Socket(addr, port);
-
             // Reader und Writer für die Socket-Verbindung erstellen
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -97,10 +136,12 @@ public class Main {
             System.out.println("Socketserver has to run!");
             System.exit(1);
             e.printStackTrace();
-        }
+        }*/
 
         JFrame frame = new JFrame("DjangoGUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        setupDrumPicture();
 
         //Object specific changes
         shoot.setOpaque(false);
@@ -114,7 +155,7 @@ public class Main {
         //setting preferred size-dependencies between objects using Int-Arrays
         fire.setPreferredSize(dimensions[0]);
         ready.setPreferredSize(dimensions[1]);
-        speed.setPreferredSize(dimensions[2]);
+        //speed.setPreferredSize(dimensions[2]);
         gunPosition.setPreferredSize(dimensions[3]);
         monitoringCommands.setSize(dimensions[4]);
         shoot.setPreferredSize(dimensions[5]);
@@ -130,8 +171,8 @@ public class Main {
         shootPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("Shot"),
                 BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
-        speedPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Speed"),
+        drumPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Setting up dart drum"),
                 BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
         monitoringPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("Monitoring"),
@@ -147,10 +188,9 @@ public class Main {
         mainPanel.setLayout(box1);
         leftMainPanel.setLayout(box2);
         rightMainPanel.setLayout(box3);
-        //informationPanel.setLayout(box4);
 
         //adding Objects to ShootPanel
-        speedPanel.add(speed);
+        //speedPanel.add(speed);
         shootPanel.add(setReady);
         shootPanel.add(ready);
         shootPanel.add(Box.createHorizontalStrut(20));
@@ -159,7 +199,9 @@ public class Main {
 
         //adding JSlider to GunPositionPanel
         gunPositionPanel.add(gunPosition, BorderLayout.NORTH);
+        gunPositionPanel.add(Box.createVerticalStrut(30));
         gunPositionPanel.add(currentPosition, BorderLayout.SOUTH);
+        //gunPositionPanel.add(Box.createVerticalStrut(20));
 
         //adding Objects to InformationPanel
         informationPanel.add(currentMovement);
@@ -167,13 +209,25 @@ public class Main {
         //adding MonitoringTextField to MonitoringPanel
         monitoringPanel.add(scrollPane, BorderLayout.CENTER);
 
+        //adding picLabel to drumPanelDart
+        drumPanelDart.add(picLabel);
+
+        //adding Buttons to drumPanelButtons
+        drumPanel.add(drumDartDrop);
+        drumPanel.add(drumForward);
+
+        //adding drumPanelButtons and drumPanelDart to drumPanel
+        drumPanel.add(drumPanelButtons);
+        drumPanel.add(Box.createHorizontalStrut(50));
+        drumPanel.add(drumPanelDart);
+
         //adding Objects to RightMainPanel
         rightMainPanel.add(gunPositionPanel);
         rightMainPanel.add(informationPanel);
 
         //adding Objects to LeftMainPanel
         leftMainPanel.add(monitoringPanel);
-        leftMainPanel.add(speedPanel);
+        leftMainPanel.add(drumPanel);
         leftMainPanel.add(shootPanel);
 
         //adding every partial Panel to MainPanel
@@ -195,13 +249,27 @@ public class Main {
             public void actionPerformed(ActionEvent e) {
                 String text1 = "Shot fired!";
                 String text2 = "You need to configure the Gun Positioning!";
-                if (prot.getGunReady() && prot.getPositionReady()) {
-                    appendText(monitoringCommands, text1);
-                    JOptionPane.showMessageDialog(frame, "Shot fired!\nGun gonna be reloaded.");
-                    prot.fire();
-                } else {
-                    appendText(monitoringCommands, text2);
+                //if (prot.getGunReady() && prot.getPositionReady()) {
+                //if (prot.getPositionReady()) {
+                //if (true) {
+                appendText(monitoringCommands, text1);
+                JOptionPane.showMessageDialog(frame, "Shot fired!\nGun gonna be reloaded.");
+                if (drumPosition > 2) {
+                    System.out.println(drumPosition);
+                    drumPosition-=2;
+                    System.out.println(drumPosition);
+                    String tempPath = "./src/drumstatus/" + drumPosition + ".png";
+                    JLabel temp = createScaledImageLabel(tempPath);
+                    picLabel.setIcon(temp.getIcon());
+                    if (drumPosition == 2)
+                        drumPosition++;
+                    if (drumPosition == 1)
+                        fire.setEnabled(false);
                 }
+                prot.fire();
+                /*} else {
+                    appendText(monitoringCommands, text2);
+                }*/
                 frame.requestFocusInWindow();
                 //monitoringCommands.setCaretPosition(monitoringCommands.getDocument().getLength());
             }
@@ -229,7 +297,7 @@ public class Main {
         });
 
         // ChangeListener für den JSlider hinzufügen
-        speed.addChangeListener(new ChangeListener() {
+        /*speed.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 int value = speed.getValue();
@@ -237,12 +305,46 @@ public class Main {
                 prot.setM_speed(value);
                 frame.requestFocusInWindow();
             }
+        });*/
+
+        drumDartDrop.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!(drumPosition % 2 == 0) ) {
+                    drumPosition++;
+                    String tempPath = "./src/drumstatus/" + drumPosition + ".png";
+                    JLabel temp = createScaledImageLabel(tempPath);
+                    picLabel.setIcon(temp.getIcon());
+                    if(drumPosition == 8) {
+                        drumForward.setEnabled(false);
+                        drumDartDrop.setEnabled(false);
+                        appendText(monitoringCommands,"Drum full\n");
+                    }
+                }
+                frame.requestFocusInWindow();
+                System.out.println(drumPosition);
+            }
+        });
+
+        drumForward.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if ((drumPosition % 2 == 0)) {
+                    drumPosition++;
+                    String tempPath = "./src/drumstatus/" + drumPosition + ".png";
+                    JLabel temp = createScaledImageLabel(tempPath);
+                    picLabel.setIcon(temp.getIcon());
+                }
+                frame.requestFocusInWindow();
+                System.out.println(drumPosition);
+            }
         });
 
         gunPosition.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 int value = gunPosition.getValue();
+                currentPosition.setText("currentPosition: " + value);
                 prot.setPositionReady(value != 0);
                 prot.setGunPos(value);
                 frame.requestFocusInWindow();
@@ -253,7 +355,7 @@ public class Main {
             @Override
             public void keyTyped(KeyEvent e) {
                 char input = e.getKeyChar();
-
+                //WASD - moving direction
                 if(input == 'w') {
                     currentMovement.setText("Current Movement: w");
                     prot.driveForwards();
@@ -270,13 +372,22 @@ public class Main {
                     currentMovement.setText("Current Movement: a");
                     prot.turnLeft();
                 }
+                //set speed
+                for (int i = 48; i < 58; i++) {
+                    char s = (char) i;
+                    System.out.println("set Speed: " + s);
+                    if (input == s) {
+                        currentMovement.setText("Speed: " + (i - 48));
+                        prot.setM_speed(i - 48);
+                    }
+                }
             }
         });
 
 
 
         //finishing off the frame
-        frame.setLocation(600, 400);
+        frame.setLocation(600, 500);
 
         frame.requestFocusInWindow();
         frame.setFocusable(true);
