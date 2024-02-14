@@ -15,15 +15,13 @@ public class Main {
     static Protocol prot = null;
     static String ip_address = "192.168.4.1";
     static int port = 23;
-<<<<<<< HEAD
-=======
+
 
     //drum Handling
     int drumPosition = 1;
     static int drumMAX = 8;
     static int picHeight = 90;
     static int picWidth = 90;
->>>>>>> drumControlling
 
 
     //following objects for GUI-generation
@@ -53,11 +51,9 @@ public class Main {
     JButton fire = new JButton("Fire");
     JButton ready = new JButton("NotReadyToFire");
     //JSlider speed = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
-<<<<<<< HEAD
-    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 0, 4, 0);
-=======
-    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 1, 4, 1);
->>>>>>> drumControlling
+    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 0, 4, 1);
+    //JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 1, 4, 1);
+
     JTextArea monitoringCommands = new JTextArea("");
     JLabel shoot = new JLabel("Shoot one dart!");
     JLabel setReady = new JLabel("Set ready!");
@@ -178,11 +174,8 @@ public class Main {
         shootPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder("Shot"),
                 BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
-<<<<<<< HEAD
-        speedPanel.setBorder(BorderFactory.createCompoundBorder(
-=======
+        //speedPanel.setBorder(BorderFactory.createCompoundBorder(
         drumPanel.setBorder(BorderFactory.createCompoundBorder(
->>>>>>> drumControlling
                 BorderFactory.createTitledBorder("Setting up dart drum"),
                 BorderFactory.createEmptyBorder(borderDistance,borderDistance,borderDistance,borderDistance)));
         monitoringPanel.setBorder(BorderFactory.createCompoundBorder(
@@ -317,8 +310,6 @@ public class Main {
                 frame.requestFocusInWindow();
             }
         });*/
-<<<<<<< HEAD
-=======
 
         drumDartDrop.addActionListener(new ActionListener() {
             @Override
@@ -352,7 +343,6 @@ public class Main {
                 System.out.println(drumPosition);
             }
         });
->>>>>>> drumControlling
 
         gunPosition.addChangeListener(new ChangeListener() {
             @Override
@@ -370,19 +360,19 @@ public class Main {
             public void keyTyped(KeyEvent e) {
                 char input = e.getKeyChar();
                 //WASD - moving direction
-                if(input == 'w') {
+                if (input == 'w') {
                     currentMovement.setText("Current Movement: w");
                     prot.driveForwards();
                 }
-                if(input == 's') {
+                if (input == 's') {
                     currentMovement.setText("Current Movement: s");
                     prot.driveBackwards();
                 }
-                if(input == 'd') {
+                if (input == 'd') {
                     currentMovement.setText("Current Movement: d");
                     prot.turnRight();
                 }
-                if(input == 'a') {
+                if (input == 'a') {
                     currentMovement.setText("Current Movement: a");
                     prot.turnLeft();
                 }
@@ -392,7 +382,6 @@ public class Main {
                     System.out.println("set Speed: " + s);
                     if (input == s) {
                         currentMovement.setText("Speed: " + (i - 48));
-<<<<<<< HEAD
                         //System.out.println("Speed: " + i);
                         prot.setM_speed(i - 48);
                     }
@@ -401,11 +390,7 @@ public class Main {
                     currentMovement.setText("Current Movement: 1");
                     prot.setM_speed(1);
                 }*/
-=======
-                        prot.setM_speed(i - 48);
-                    }
-                }
->>>>>>> drumControlling
+                //prot.setM_speed(i - 48);
             }
         });
 
