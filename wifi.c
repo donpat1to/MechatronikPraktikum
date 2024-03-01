@@ -11,26 +11,76 @@ fdserial *board;
 fdserial *wlan;
 
 // protocol parameters
+#define BUFFER_MAX 30
 int botBusy = 0;
-
-
-char* m_direction;
-//m_direction = (char *) malloc(3 * sizeof(char));
+char m_direction[3];
 int speed = 0; 
 int fire = 0;
 int gunPos = 0;
 
-// control parameters
-/*
-int dc_left = 
-int dc_right =
-int 360servo_left = 
-int 360servo_right = 
-int servo_reloading = 
-int servo_insertion = 
-int servo_lift = 
-*/
+/*** control parameters
+ * driving pins(360Servo) [left: pin12(check: pin 14); right: pin13(check: pin 15)]
+ */
+#define DC_LEFT 0 
+#define DC_RIGHT 1
+#define SERVO_LIFT 2
+#define SERVO_RELOADING 16
+#define SERVO_INSERTION 17
 
+//operating variables
+#define MAX_REL 900
+int angle = 0;
+
+
+void intToCharArray(int value, char result[], int size) {
+    if (size <= 0) {
+        return; //Error: size invalid
+    }
+
+    //final array filled with zeros
+    memset(result, 0, size);
+
+    //check value equals zero
+    if (value == 0) {
+        result[0] = '0';
+        return;
+    }
+
+    int index = 0;
+    while (value > 0 && index < size - 1) {
+        result[index++] = '0' + (value % 10);
+        value /= 10;
+    }
+
+    //mirroring char array
+    int i = 0;
+    int j = index - 1;
+    while (i < j) {
+        char temp = result[i];
+        result[i] = result[j];
+        result[j] = temp;
+        i++;
+        j--;
+    }
+}
+
+
+int charArrayToInt(char tempo_char[]){
+   num = 0;
+   i = 0;
+   isNegative = 0;
+   if (tempo_char[i] == '-'){
+      isNegative = 1;
+      i++;
+   }
+   while (tempo_char[i] && (tempo_char[i] >= '0' && tempo_char[i] <= '9')){
+      num = num * 10 + (tempo_char[i] - '0');
+      i++;
+   }                
+   if(isNegative) num = -1 * num;
+
+   return num;
+}   
 
 int main()
 {
@@ -38,42 +88,50 @@ int main()
    wlan = fdserial_open(8,7,0,115200);
    
    
-   char buffer[128];
+   char buffer[BUFFER_MAX];
    
    int index = 0;
-   int printIndex2 = 0; 
+   //int printIndex2 = 0; 
   
-   while(1) {
-      space(2);
+   /*while(1) {
       char ch = fdserial_rxChar(wlan);  
 
       if(ch == '\r') {
-         //buffer = calloc(100 ,sizeof(char));
-         //printf("hanjo\n");
          printIndex2 = 0; 
          while(printIndex2 < index) {
             fdserial_txChar(board, buffer[printIndex2]); 
             printIndex2++; 
          }
          printf("Received: %s\n", buffer);
-         stringSeparation(buffer, ";");
-         //if (botBusy == 0) 
+         stringSeparation(buffer, ";"); 
          order();
          memset(buffer, 0, sizeof(buffer)); 
-         //send("1\r");
-         //printf("send aufgerufen worden\n");
          printIndex2 = 0;
          index = 0;
-         //free(buffer);
       } 
          
       else if (ch != -1){
          buffer[index] = ch;
          index++;
-         //printf("bruder muss lost%c\n",buffer[index]);
       }    
           
+   }*/
+   while(1){
+      if(fdserial_rxPeek(wlan) != 0) {     
+          char ch = fdserial_rxChar(wlan);
+          
+          while(ch != '\r') {
+             if (ch != -1){
+               buffer[index] = ch; 
+               index++;
+             } 
+             ch = fdserial_rxChar(wlan);
+          }
+          order(buffer);           
+          fdserial_rxFlush(wlan);
+      }      
    }
+   
    fdserial_close(board); 
    fdserial_close(wlan);
    
@@ -81,7 +139,8 @@ int main()
    return 0; 
 }
 
-void send(char bufferSend[128])
+/*
+void send(char bufferSend[BUFFER_MAX])
 {
    //printf("in send drin\n");
    int printIndex = 0;
@@ -93,42 +152,48 @@ void send(char bufferSend[128])
    fdserial_txChar(wlan, '\r');
    botBusy = 0;
    //printIndex = 0; 
-}
+}*/
 
 
 /*** static sending protocol {[String];[int];[int];[int]}
    * splitting and saving data in received
    */
-void stringSeparation(char* buffer, char* delimiter)
+void stringSeparation(char buffer[BUFFER_MAX])
 {
-   m_direction = calloc(5 ,sizeof(char));
+   char delimiter = ";";
    if (buffer == NULL || delimiter == NULL) {
       printf("Error: NULL pointer detected.\n");
       return;
    }
-   //printf("in stringSeparation drin\n");
+   
+   //resetting all variables to default
+   m_direction = "";
+   speed = 0; 
+   fire = 0;
+   gunPos = 0;
+
+   //setting variables current [m_direction; speed; fire; gunPos]
    int counter = 0;
    char* token;
    token = strtok(buffer, delimiter);
+   strcpy(m_direction, token);
    
-   while(counter < 4 && token != NULL) {
-      if (counter == 0)
-         m_direction = token;
-      if (counter == 1)
-         speed = atoi(token);
-      if (counter == 2)
-         fire = atoi(token);
-      if (counter == 3)
-         gunPos = atoi(token);
-      counter++;
-      token = strtok(NULL, delimiter);
-   }
+   token = strtok(NULL, &delimiter); 
+   if(token != NULL) 
+     strcpy(tempo_char, token);
+   speed = charArrayToInt(tempo_char)
+   tempo_char = "";
    
-   printf("Direction: %c\n",m_direction[0]);
-   printf("Speed: %d\n",speed);
-   printf("Fire: %d\n",fire);
-   printf("Gun Position: %d\n",gunPos);
-   free(m_direction);
+   token = strtok(NULL, &delimiter); 
+   if(token != NULL) 
+     strcpy(tempo_char, token);
+   fire = charArrayToInt(tempo_char)
+   tempo_char = "";
+   
+   token = strtok(NULL, &delimiter); 
+   if(token != NULL) 
+     strcpy(tempo_char, token);
+   gunPos = charArrayToInt(tempo_char)
 }
 
 void order(){
@@ -157,36 +222,30 @@ void order(){
    }
    if(strcmp(m_direction, "0") == 0) {
       botBusy = 0;
-      //drive_speed(0,0);
-      //send("stopping\r");
-   }
-   //printf("nix mit order gemacht\n");   
-}
-
-void space(int n){
-   for (int temp = 0; temp < n; temp++)
-      printf("\n");
-}   
+   } 
+}  
 
 void driveForward() {
-   //drive_speed(speed,speed);
-   //printf("drive_speed: %d\n", speed);
-   send("forw\r");
-   //printf("send aufgerufen\n");
+   drive_speed(speed,speed);
+   fdserial_txChar(wlan, '1');
+   fdserial_txChar(wlan, '\r');
 } 
 
 void driveRight() {
-   //drive_speed(speed,-speed);
-   send("right\r");
+   drive_speed(speed,-speed);
+   fdserial_txChar(wlan, '1');
+   fdserial_txChar(wlan, '\r');
 } 
 void driveLeft() {
-   //drive_speed(-speed,speed);
-   send("left\r");
+   drive_speed(-speed,speed);
+   fdserial_txChar(wlan, '1');
+   fdserial_txChar(wlan, '\r');
 } 
 
 void driveBackwards() {
-   //drive_speed(-speed,-speed);
-   send("back\r");
+   drive_speed(-speed,-speed);
+   fdserial_txChar(wlan, '1');
+   fdserial_txChar(wlan, '\r');
 }
 
 void reload(){
@@ -205,4 +264,5 @@ void loadDartRotation() {
    //turn
    //wait
 }      
+
 
