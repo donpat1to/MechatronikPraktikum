@@ -51,19 +51,19 @@ public class Main {
     JButton fire = new JButton("Fire");
     JButton ready = new JButton("NotReadyToFire");
     //JSlider speed = new JSlider(JSlider.HORIZONTAL, 0, 50, 0);
-    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 0, 4, 1);
+    JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 1, 7, 1);
     //JSlider gunPosition = new JSlider(JSlider.HORIZONTAL, 1, 4, 1);
 
     JTextArea monitoringCommands = new JTextArea("");
     JLabel shoot = new JLabel("Shoot one dart!");
     JLabel setReady = new JLabel("Set ready!");
-    JLabel currentPosition = new JLabel("Current Position: 1");
+    JLabel currentPosition = new JLabel("Current Position: -");
     JLabel currentMovement = new JLabel("Current Movement: -");
     JButton drumForward = new JButton("Rotate Drum");
     JButton drumDartDrop = new JButton("Drop Dart");
+    JButton jiggle = new JButton("Jiggle");
     JLabel picLabel;
     JScrollPane scrollPane;
-
 
 
     /***
@@ -128,7 +128,7 @@ public class Main {
 
     public Main(String addr, int port) {
         //Setting up Socket connection with DjangoBot
-        /*try {
+        try {
             socket = new Socket(addr, port);
             // Reader und Writer für die Socket-Verbindung erstellen
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -139,7 +139,7 @@ public class Main {
             System.out.println("Socketserver has to run!");
             System.exit(1);
             e.printStackTrace();
-        }*/
+        }
 
         JFrame frame = new JFrame("DjangoGUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -151,9 +151,12 @@ public class Main {
         setReady.setOpaque(false);
         ready.setBackground(Color.RED);
         gunPosition.setOrientation(1);
+        gunPosition.setValue(0);
         monitoringCommands.setEditable(false);
         scrollPane = new JScrollPane(monitoringCommands);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        fire.setEnabled(false);
+
 
         //setting preferred size-dependencies between objects using Int-Arrays
         fire.setPreferredSize(dimensions[0]);
@@ -219,6 +222,7 @@ public class Main {
         //adding Buttons to drumPanelButtons
         drumPanel.add(drumDartDrop);
         drumPanel.add(drumForward);
+        drumPanel.add(jiggle);
 
         //adding drumPanelButtons and drumPanelDart to drumPanel
         drumPanel.add(drumPanelButtons);
@@ -279,6 +283,12 @@ public class Main {
             }
         });
 
+        jiggle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                prot.setJiggle();
+            }
+        });
 
         ready.addActionListener(new ActionListener() {
             @Override
@@ -289,6 +299,7 @@ public class Main {
                     ready.setText(text);
                     appendText(monitoringCommands, text);
                     prot.setGunReady(true);
+                    fire.setEnabled(true);
                 } else {
                     ready.setBackground(Color.RED);
                     String text = "NOT ready to Fire!";
@@ -314,6 +325,7 @@ public class Main {
         drumDartDrop.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                prot.setDropDart();
                 if (!(drumPosition % 2 == 0) ) {
                     drumPosition++;
                     String tempPath = "./src/drumstatus/" + drumPosition + ".png";
@@ -338,6 +350,7 @@ public class Main {
                     String tempPath = "./src/drumstatus/" + drumPosition + ".png";
                     JLabel temp = createScaledImageLabel(tempPath);
                     picLabel.setIcon(temp.getIcon());
+                    prot.setRotDrum();
                 }
                 frame.requestFocusInWindow();
                 System.out.println(drumPosition);
@@ -379,18 +392,13 @@ public class Main {
                 //set speed
                 for (int i = 48; i < 58; i++) {
                     char s = (char) i;
-                    System.out.println("set Speed: " + s);
                     if (input == s) {
+                        System.out.println("set Speed: " + s);
                         currentMovement.setText("Speed: " + (i - 48));
                         //System.out.println("Speed: " + i);
                         prot.setM_speed(i - 48);
                     }
                 }
-                /*if(input == '1') {
-                    currentMovement.setText("Current Movement: 1");
-                    prot.setM_speed(1);
-                }*/
-                //prot.setM_speed(i - 48);
             }
         });
 

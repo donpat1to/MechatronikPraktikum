@@ -1,9 +1,9 @@
 import java.io.*;
 
 public class Protocol implements BotInterface{
-    String message, answer, m_direction = "\r";
+    String message, answer = "\r";
     //positionReady rausnehmen
-    int gunPos, fire, m_speed, gunReady, positionReady = 0;
+    int gunPos, dart, m_speed, gunReady, positionReady, m_direction, jiggle = 0;
     BufferedReader reader;
     BufferedWriter writer;
 
@@ -42,19 +42,18 @@ public class Protocol implements BotInterface{
     }
 
     /**** SENDER: Thread zum Schreiben von Daten
-     * Protokollform:   "m_direction;m_speed;fire;gunPos"
-     * Attribution:     "String;String;int;int"
+     * Protokollform:   "m_direction;m_speed;dart;gunPos"
+     * Attribution:     "int;int;int;int"
      */
     public void send() {
         //message = "ab" + ";" + 1 + ";" + 2 + ";" + 3;
         try {
-            message = m_direction + ";" + m_speed + ";" + fire + ";" + gunPos + ";" + "\r";
+            message = m_direction + ";" + m_speed + ";" + dart + ";" + gunPos + ";" + gunReady + ";" + jiggle + "\r";
             System.out.println(message);
             //Thread.sleep(1000);
             writer.write(message);
             writer.flush();
             reset();
-            //System.out.println("Sent");
             //writer.close();
         } catch (IOException e) {//| InterruptedException e) {
             //writer.close();
@@ -63,23 +62,24 @@ public class Protocol implements BotInterface{
     }
 
     void reset(){
-        this.m_direction = "0";
-        this.fire = 0;
+        this.m_direction = 0;
+        this.dart = 0;
+        this.gunReady = 0;
+        this.jiggle = 0;
+        //this.gunPos = 0;
     }
 
-    public void setM_direction(String m_direction) {
+    public void setM_direction(int m_direction) {
         this.m_direction = m_direction;
         //send();
     }
 
     public void setM_speed(int m_speed) {
         this.m_speed = m_speed;
-        //send();
     }
 
     public void setGunPos(int gunPos){
         this.gunPos = gunPos;
-        //send();
     }
 
     @Override
@@ -118,19 +118,38 @@ public class Protocol implements BotInterface{
     }*/
     @Override
     public void fire() {
-        fire = 1;
+        dart = 1;
         //send();
     }
 
+    public void setDropDart(){
+        dart = 2;
+    }
+
+    public void setRotDrum(){
+        dart = 3;
+    }
+
+    public void setJiggle() {
+        this.jiggle = 1;
+    }
+
+    /***
+     * w = 1
+     * s = 2
+     * a = 3
+     * d = 4
+     * @param sp
+     */
     public void drive(int sp){
         if (sp == 1)
-            setM_direction("w");
+            setM_direction(1);
         if (sp == -1)
-            setM_direction("s");
+            setM_direction(2);
         if (sp == -2)
-            setM_direction("a");
+            setM_direction(3);
         if (sp == 2)
-            setM_direction("d");
+            setM_direction(4);
     }
 
 }

@@ -1,3 +1,0 @@
-C:/Users/Patrick/MechatronikPraktikum/WifiProject/cmake-build-debug/CMakeFiles/WifiProject.dir
-C:/Users/Patrick/MechatronikPraktikum/WifiProject/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Patrick/MechatronikPraktikum/WifiProject/cmake-build-debug/CMakeFiles/rebuild_cache.dir
